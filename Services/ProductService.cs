@@ -1,53 +1,63 @@
 ﻿using SimpleAPI.Models;
+using SimpleAPI.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace SimpleAPI.Services;
 public class ProductService
 {
-	static List<Product> Products { get; }
+	private readonly ProductContext _context;
 
-	static ProductService()
+	public ProductService(ProductContext productContext)
 	{
-		Products = new List<Product>();
-		Products.Add(new Product
-		{
-			Name = "Prodottotest",
-			Description = "Prodotto di test ottimo da gustare",
-			Discount = 0,
-			Id = 1,
-			IsOnOffering = false,
-			MinUnitsToDiscount = 0,
-			Price = 12.50
-		});
+		_context = productContext;
 	}
 
-	public static List<Product> GetAll() => Products;
+	public IEnumerable<Product> GetAll()
+	{
+		return _context.Products
+			.AsNoTracking()
+			.ToList();
+	}
 
-	public static Product? GetProductById(int id) => Products.FirstOrDefault(p => p.Id == id);
+	public Product? GetProductById(int id)
+	{
+		return _context.Products
+			.AsNoTracking()
+			.FirstOrDefault(p => p.Id == id);
+	} 
 
-	public static void Add(Product product) => Products.Add(product);
+	public Product Create(Product newProduct)
+	{
+		_context.Products.Add(newProduct);
+		_context.SaveChanges();
 
-	public static void Delete(int id)
+		return newProduct;
+	}
+
+	public void DeleteById(int id)
     {
-		var product = GetProductById(id);
+		var productToDelete = _context.Products.Find(id);
 
-		if(product != null)
-			Products.Remove(product);
+		if(productToDelete != null)
+		{
+			_context.Products.Remove(productToDelete);
+			_context.SaveChanges();
+		}
 
 		return;
     }
 
-	public static void Update(Product product)
+	public void Update(Product product)
     {
-		var index = Products.FindIndex(p => p.Id == product.Id);
+		var productToUpdate = _context.Products.Find(product.Id);
 
-        if (index != -1)
-			Replace(index, product);
+        if (productToUpdate != null)
+		{
+			_context.Products.Remove(productToUpdate);
+			_context.Products.Add(product);
+			_context.SaveChanges();
+		}
         return;
     }
 
-	private static void Replace(int index, Product product)
-    {
-		Products.RemoveAt(index);
-		Products.Insert(index, product);
-    }
 }

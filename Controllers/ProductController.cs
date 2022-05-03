@@ -8,17 +8,19 @@ namespace SimpleAPI.Controllers;
 [Route("[controller]")]
 public class ProductController : ControllerBase
 {
-	public ProductController()
+	private ProductService _productService;
+	public ProductController(ProductService productService)
 	{
+		_productService = productService;
 	}
 
 	[HttpGet]
-	public ActionResult<List<Product>> GetAll() => ProductService.GetAll();
+	public IEnumerable<Product> GetAll() => _productService.GetAll();
 
 	[HttpGet("{id}")]
 	public ActionResult<List<Product>> Get(int id)
 	{
-		var product = ProductService.GetProductById(id);
+		var product = _productService.GetProductById(id);
 
 		if(product == null)
 			return NotFound();
@@ -27,11 +29,11 @@ public class ProductController : ControllerBase
 	}
 
 	[HttpPost]
-	public IActionResult Create(Product product)
+	public IActionResult Create(Product newProduct)
     {
-		ProductService.Add(product);
+		_productService.Create(newProduct);
 		
-		return CreatedAtAction(nameof(Create), product);
+		return CreatedAtAction(nameof(Create), newProduct);
     }
 
 	[HttpPut("{id}")]
@@ -40,12 +42,12 @@ public class ProductController : ControllerBase
 		if (id != product.Id)
 			return BadRequest();
 
-		var existingProduct = ProductService.GetProductById(id);
+		var existingProduct = _productService.GetProductById(id);
 
 		if (existingProduct == null)
 			return NotFound();
 
-		ProductService.Update(product);
+		_productService.Update(product);
 
 		return Ok(product);
     }
@@ -53,12 +55,12 @@ public class ProductController : ControllerBase
 	[HttpDelete("{id}")]
 	public IActionResult Delete(int id)
     {
-		var existingProduct = ProductService.GetProductById(id);
+		var existingProduct = _productService.GetProductById(id);
 
 		if (existingProduct == null)
 			return NotFound(id);
 
-		ProductService.Delete(id);
+		_productService.DeleteById(id);
 
 		return NoContent();
     }
